@@ -35,7 +35,7 @@ def nativeBuildPath = file(rootPath + "/build/lib").path
 
 def arch = System.getProperty("os.arch")
 def os = org.gradle.internal.os.OperatingSystem.current()
-def osName = os.nativePrefix
+def osName = os.isLinux() ? "linux" : os.isMacOsX() ? "macosx" : "windows"
 
 sourceSets.main {
     java.srcDirs = [javaApiJavaPath]
