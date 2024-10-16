@@ -8,13 +8,14 @@
 
 // Apply the java-library plugin to add support for Java Library
 apply plugin: 'java-library'
+apply plugin: 'maven-publish'
 apply plugin: 'eclipse'
 
 // In this section you declare where to find the dependencies of your project
 repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
-    jcenter()
+    mavenCentral()
 }
 
 tasks.withType(JavaCompile) {
@@ -30,10 +31,40 @@ def rootPath = file(projectDir + "/../../").path
 def javaApiSourcePath = file(rootPath + "/srcs/api-java/").path
 def javaApiJavaPath = file(javaApiSourcePath + "/java/").path
 
-def nativeBuildPathWindows = file(rootPath + "/build/lib/release").path
-def nativeBuildPathLinux = file(rootPath + "/build/release/lib").path
+def nativeBuildPath = file(rootPath + "/build/lib").path
+
+def arch = System.getProperty("os.arch")
+def os = org.gradle.internal.os.OperatingSystem.current()
+def osName = os.nativePrefix
 
 sourceSets.main {
-   java.srcDirs = [javaApiJavaPath]
+    java.srcDirs = [javaApiJavaPath]
 }
 
+jar {
+    from(nativeBuildPath) {
+        include "libheifjni.*"
+    }
+}
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId = 'com.nokia.heif'
+            artifactId = "heif-$osName-$arch"
+            version = '3.7.0'
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/ydranchuk/heif"
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
